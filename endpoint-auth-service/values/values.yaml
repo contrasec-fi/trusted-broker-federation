@@ -1,0 +1,216 @@
+authProvider:
+  address: ishare-auth
+  port: 8080
+configService:
+  additionalAnnotations: {}
+  additionalLabels: {}
+  additonalEnvVars: []
+  affinity: {}
+  autoscaling:
+    enabled: false
+    maxReplicas: 10
+    metrics: []
+    minReplicas: 1
+  configmapUpdater:
+    enabled: true
+    image:
+      pullPolicy: IfNotPresent
+      repository: quay.io/fiware/envoy-configmap-updater
+      tag: 0.4.3
+  db:
+    password: pass
+    url: jdbc:h2:mem:devDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+    user: ecs
+  fullnameOverride: ""
+  healthPort: 9090
+  image:
+    pullPolicy: IfNotPresent
+    repository: quay.io/fiware/endpoint-configuration-service
+    tag: 0.4.3
+  ingress:
+    annotations: {}
+    enabled: false
+    hosts: []
+    tls: []
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 30
+  meshExtension:
+    authProviderName: outbound|80||ext-authz
+    enabled: false
+    workloadSelector:
+      name: app
+      value: app
+  meshExtensionUpdater:
+    enabled: false
+    image:
+      pullPolicy: IfNotPresent
+      repository: quay.io/fiware/mesh-extension-updater
+      tag: 0.4.3
+  nameOverride: ""
+  nodeSelector: {}
+  port: 8080
+  prometheus:
+    enabled: true
+    path: /prometheus
+    port: 9090
+  readinessProbe:
+    initialDelaySeconds: 31
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 30
+  replicaCount: 1
+  resources: {}
+  revisionHistoryLimit: 3
+  route:
+    annotations: {}
+    enabled: false
+    tls: {}
+  service:
+    annotations: {}
+    port: 8080
+    type: ClusterIP
+  serviceAccount:
+    create: true
+  tolerations: []
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+fullnameOverride: ""
+ishare:
+  additionalAnnotations: {}
+  additionalLabels: {}
+  affinity: {}
+  autoscaling:
+    enabled: false
+    maxReplicas: 10
+    metrics: []
+    minReplicas: 1
+  enabled: true
+  fullnameOverride: ""
+  image:
+    pullPolicy: IfNotPresent
+    repository: quay.io/fiware/ishare-auth-provider
+    tag: 0.4.3
+  ingress:
+    annotations: {}
+    enabled: false
+    hosts: []
+    tls: []
+  nameOverride: ""
+  nodeSelector: {}
+  port: 8080
+  replicaCount: 1
+  resources: {}
+  revisionHistoryLimit: 3
+  route:
+    annotations: {}
+    enabled: false
+    tls: {}
+  service:
+    annotations: {}
+    port: 8080
+    type: ClusterIP
+  serviceAccount:
+    create: true
+  serviceEntry:
+    address: ishare-authprovider
+    enabled: false
+    host: ext-authz
+    providerPort: 8080
+    servicePort: 80
+  storage:
+    enabled: true
+    size: 8G
+  tolerations: []
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+nameOverride: ""
+sidecar:
+  image:
+    pullPolicy: IfNotPresent
+    repository: quay.io/fiware/envoy
+    tag: 0.4.3
+  initConfig:
+    pullPolicy: IfNotPresent
+    repository: quay.io/fiware/envoy-resource-updater
+    tag: 0.4.3
+  initIptables:
+    pullPolicy: IfNotPresent
+    repository: quay.io/fiware/init-iptables
+    tag: 0.4.3
+  logLevel: trace
+  port: 15001
+  portsToIgnore: 5432,9092,443
+  updateConfig:
+    pullPolicy: IfNotPresent
+    repository: quay.io/fiware/envoy-resource-updater
+    tag: 0.4.3
+  userId: 1337
+sidecarInjector:
+  additionalAnnotations: {}
+  additionalLabels: {}
+  affinity: {}
+  annotationNamespace: sidecar.k8s.fiware.org
+  certificate:
+    cert: |
+      -----BEGIN CERTIFICATE-----
+        ---
+      -----END CERTIFICATE-----
+    issuer:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: self-signed
+    key: |
+      -----BEGIN PRIVATE KEY-----
+        ---
+      -----END PRIVATE KEY-----
+    type: cert-manager
+  enabled: true
+  fullnameOverride: eas-sidecar-injector
+  healthPort: 9000
+  image:
+    pullPolicy: IfNotPresent
+    repository: expediagroup/kubernetes-sidecar-injector
+    tag: 1.0.1
+  labelNamespace: sidecar.k8s.fiware.org
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 30
+  logLevel: 2
+  nameOverride: ""
+  nodeSelector: {}
+  overrideSidecarconfig: {}
+  port: 8443
+  readinessProbe:
+    initialDelaySeconds: 31
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 30
+  replicaCount: 1
+  restrictNamespace:
+    enabled: false
+    label: sidecar-injection
+    value: enabled
+  restrictObjects:
+    enabled: true
+    label: sidecar-injection
+    value: enabled
+  revisionHistoryLimit: 3
+  service:
+    annotations: {}
+    port: 443
+    type: ClusterIP
+  serviceAccount:
+    create: true
+  tolerations: []
+
