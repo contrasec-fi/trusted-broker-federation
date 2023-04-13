@@ -1,0 +1,73 @@
+stages:
+- build
+- deploy
+
+docker-build:
+  tags:
+  - profirator
+  image: docker:19.03.12
+  stage: build
+
+  services:
+  - docker:20.10.21-dind
+  script:
+  - until docker info; do sleep 10; done
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - echo "Building image"
+  - docker rmi --force "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+  - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" ./app/ --no-cache
+  - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+  when: manual
+
+
+# Deploy job
+.deploy_template: &deploy_template
+  tags:
+  - profirator
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+  - echo "$KUBE" > "$(pwd)/kube.config"
+  - sed -i "s!IMAGE!${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}!g" ./app/broker-federation-deployment.yaml
+  - sed -i "s/-CONSUMER_ID-/${CONSUMER_ID}/g" ./app/broker-federation-deployment.yaml
+  - sed -i "s/-PROVIDER_ID-/${PROVIDER_ID}/g" ./app/broker-federation-deployment.yaml
+  - sed -i "s/-EMAIL-/${EMAIL}/g" ./app/broker-federation-deployment.yaml
+  - sed -i "s/-DOMAIN-/${DOMAIN}/g" ./app/broker-federation-deployment.yaml
+  - kubectl -n ${NAMESPACE} apply -f ./app/broker-federation-deployment.yaml --kubeconfig "$(pwd)/kube.config"
+  - kubectl -n ${NAMESPACE} rollout restart deployment broker-federation --kubeconfig "$(pwd)/kube.config"
+
+# Deploy job
+.deploy_template_eas: &deploy_template_eas
+  tags:
+  - profirator
+  stage: deploy
+  image: dtzar/helm-kubectl
+  script:
+  - echo "$KUBE" > "$(pwd)/kube.config"
+  - kubectl -n ${NAMESPACE} apply -f ./endpoint-auth-service/deployments.yaml --kubeconfig "$(pwd)/kube.config"
+  - helm repo add fiware https://fiware.github.io/helm-charts
+  - helm repo update
+  - helm upgrade --install federation-sidecar fiware/endpoint-auth-service -n ${NAMESPACE} -f ./endpoint-auth-service/values/values.yaml --kubeconfig "$(pwd)/kube.config"
+  - echo "Restarting Scorpio Context Broker..."
+  - kubectl -n ${NAMESPACE} rollout restart deployment scorpioapp --kubeconfig "$(pwd)/kube.config"
+
+
+do deploy staging:
+  <<: *deploy_template
+  variables:
+    KUBE: "$KUBECONFIG"
+    DOMAIN: "$DOMAIN_STAGING"
+    NAMESPACE: odala-staging
+    PROVIDER_ID: "$I4TRUST_PROVIDER_CLIENT_ID"
+    CONSUMER_ID: "$I4TRUST_CONSUMER_CLIENT_ID"
+    EMAIL: "$I4TRUST_CONSUMER_EMAIL"
+  only:
+    - /^odala-staging./
+
+do deploy staging_eas:
+  <<: *deploy_template_eas
+  variables:
+    KUBE: "$KUBECONFIG"
+    NAMESPACE: odala-staging
+  only:
+    - /^odala-staging./
