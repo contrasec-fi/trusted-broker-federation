@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    h3 {text-align: center; color: white;}
+    h2 {text-align: center; color: white;}
+    p {text-align: center; color: white;}
+    form {text-align: center;}
+    body {background-color: darkblue;}
+    footer {
+        clear: both;
+        color: White;
+        padding: 0;
+        text-align: center;
+        vertical-align: middle;
+        line-height: normal;
+        margin: 0;
+        position: fixed;
+        bottom: 20px;
+        width: 100%;
+        }
+</style>
+<body>
+    <h2>Search entities</h2>
+    <br>
+    <h3>Type:</h3>
+    <form action="/entities/type" method="POST">
+        <input type="hidden" name="token" id="token" size="30" value={{ access_token }}>
+        <input type="text" name="entity" id="entity" size="30" placeholder="DELIVERYORDER" required><br>
+        <input type="submit" value="Submit">
+    </form>
+    <br>
+    <h3>ID:</h3>
+    <form action="/entities/id" method="POST">
+        <input type="hidden" name="token" id="token" size="30" value={{ access_token }}>
+        <input type="text" name="entity" id="entity" size="30" placeholder="urn:CTS:DELIVERYORDER:001" required><br>
+        <input type="submit" value="Submit">
+    </form>
+    <br>
+    <h3>Attribute:</h3>
+    <form action="/entities/attribute" method="POST">
+        <input type="hidden" name="token" id="token" size="30" value={{ access_token }}>
+        <input type="text" name="entity" id="entity" size="30" placeholder="state" required><br>
+        <input type="submit" value="Submit">
+    </form>
+    <footer>
+        <img src="/static/odala.png" alt="ODALA">
+        <a href="https://contrasec.fi"><img src="/static/contrasec.jpg" alt="Contrasec"></a>
+        <a href="https://i4trust.org"><img src="/static/i4trust.png" alt="i4trust" width="25%" height="25%"></a>
+</footer>
+</body>
+</html>
