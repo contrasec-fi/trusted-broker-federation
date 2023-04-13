@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: broker-federation
+  name: broker-federation
+spec:
+  selector:
+    matchLabels:
+      app: broker-federation
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: broker-federation
+    spec:
+      volumes:
+      - name: ishare-keys
+        secret:
+          secretName: ishare-keys
+      imagePullSecrets:
+      - name: gitlab-registry
+      containers:
+      - env:
+        - name: PROVIDER_CLIENT_ID
+          value: "-PROVIDER_ID-"
+        - name: CONSUMER_CLIENT_ID
+          value: "-CONSUMER_ID-"
+        - name: CONSUMER_EMAIL
+          value: "-EMAIL-"
+        - name: KEYROCK_URL
+          value: "https://accounts.-DOMAIN-"
+        - name: APP_URL
+          value: "https://i4trust.-DOMAIN-"
+        - name: SCORPIO_URL
+          value: "https://kong.-DOMAIN-"
+        - name: PRIVATE_KEY_FILE
+          value: private_key
+        - name: X5C_VALUE_FILE
+          value: x5c
+        image: IMAGE
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: ishare-keys
+          mountPath: "/keys/secrets/"
+        name: broker-federation
+      restartPolicy: Always
+status: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: broker-federation
+  name: broker-federation
+spec:
+  ports:
+  - name: "5000"
+    port: 5000
+    targetPort: 5000
+  selector:
+    app: broker-federation
+status:
+  loadBalancer: {}
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 8k
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header Referrer-Policy 'same-origin';
+      add_header Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline';";
+    nginx.ingress.kubernetes.io/modsecurity-snippet: |
+      SecRuleEngine On
+      SecAuditEngine On
+      #SecAuditLog /dev/stdout
+      SecAuditLogFormat JSON
+      SecAction "id:900001, phase:1, nolog, pass, t:none, setvar:tx.paranoia_level=1, setvar:tx.allowed_methods=GET POST"
+
+  name: broker-federation
+spec:
+  rules:
+  - host: i4trust.-DOMAIN-
+    http:
+      paths:
+      - backend:
+          service:
+            name: broker-federation
+            port:
+              number: 5000
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - i4trust.-DOMAIN-
+    secretName: broker-federation-cert

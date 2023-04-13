@@ -1,0 +1,6 @@
+cryptography
+Jinja2
+PyJWT
+requests
+Flask
+waitress
