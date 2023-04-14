@@ -31,7 +31,7 @@ This application is used to fetch entities and authenticate & authorize user wit
 
 The application is simple but secure due to backend/frontend scheme. The backend server handles authentication & authorization functions while frontend is used to login and search entities from Scorpio brokers.
 
-Here is a [demo video]()
+Here is a [demo video](https://youtu.be/KAc9PRu56Ig). It's awesome!
 
 
 ## 3.1. Application functions
@@ -436,6 +436,11 @@ Policy:
 
 ![Policy contents](./pictures/ar-policy.png)
 ---
+
+# 6 Known issues
+
+Sometimes fetching the federated data returns empty array.
+
 # 7 Contact 
 
 We are here to help you! If you need any help, or just want to have a chat, please contact ilari.mikkonen@contrasec.fi
