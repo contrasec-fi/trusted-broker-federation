@@ -413,7 +413,7 @@ curl --location --request POST 'http://localhost:9090/ngsi-ld/v1/csourceRegi
 ‘
 ```
 
-*Note:* `"endpoint"´ must be HTTP
+*Note:* "endpoint" must be HTTP
 
 ---
 
@@ -428,7 +428,7 @@ It is possible to host these components seprately. More on this on [iSHARE satel
 
 ## 6.1 iSHARE Authorization Registry policies
 
-Sub broker must create an organization level policy for main broker, as shown in picture below, Access Subject: `EU.EORI.FICTSODALACPROVIDER`. 
+Sub broker must create an organization level policy for main broker, as shown in picture below, Access Subject: `EU.EORI.FICTSODALAPROVIDER`. 
 
 ![Policies in AR](./pictures/ishare-ar.png)
 
