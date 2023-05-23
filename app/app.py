@@ -7,6 +7,8 @@ import requests
 import json
 import uuid
 import secrets
+import re
+import time
 from datetime import datetime, timedelta
 from settings import (PROVIDER_CLIENT_ID, CONSUMER_CLIENT_ID, KEYROCK_URL, APP_URL,
                       KEYROCK_AUTHZ_URL, KEYROCK_TOKEN_URL, SCORPIO_URL, CONSUMER_EMAIL, AUTH_APP_URL,
@@ -29,6 +31,8 @@ consumer_client_id = CONSUMER_CLIENT_ID
 private_key = PRIVATE_KEY
 authorize_x5c = X5C_VALUE
 
+access_tokens = []
+
 
 # Authorize
 @app.route("/", methods=['GET'])
@@ -38,13 +42,9 @@ def index():
     return render_template('index.html', code_params=code_params, keyrock_authz=keyrock_authz, auth_app_url=auth_app_url)
 
 
-# Check this AUTH_SESSION IF
-# IT IS NEEDED ???
-__AUTHZ_SESSION__ = requests.session()
 
 @app.route("/auth", methods=['GET'])
 def auth():
-    global __AUTHZ_SESSION__
     authz_session = requests.session()
     authorize_request = requests.post(keyrock_authz, headers={
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -59,7 +59,6 @@ def auth():
         print(authorize_request.json())
         return render_template("registration_failed.html", app_url=app_url)
     else:
-        __AUTHZ_SESSION__ = authz_session
         return render_template("registered.html", app_url=app_url)
 
 
@@ -77,14 +76,15 @@ def authorized():
             })
 
     auth_token_json = request_access_token.json()
-    access_token = auth_token_json['access_token']
-    __ACCESS__ = access_token
+    access_token = str(auth_token_json['access_token'])
 
     if request_access_token.status_code != 200:
         return render_template('error_page.html', app_url=app_url)
     else:
-        print(access_token)
-        return render_template('entities.html', access_token=access_token)
+        add_token(access_token)
+        delete_old_tokens()
+        access_token_payload = parse_token(access_token)
+        return render_template('entities.html', access_token=access_token_payload)
     
 
 @app.route("/request", methods=['GET', 'POST'])
@@ -111,6 +111,10 @@ def fetchEntitiesID():
 
 ## Custom error pages
 
+@app.errorhandler(401)
+def page_unauthorized(e):
+    return render_template('401.html', app_url=app_url), 401
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html', app_url=app_url), 404
@@ -125,7 +129,12 @@ def page_internal_server_error(e):
 ## Fetch entities
 def fetchCommon(scorpio_url):
     scorpio_type = request.form.get('entity')
-    btoken = 'Bearer ' + request.form.get('token')
+    payload = request.form.get('token')
+    checked_payload = check_token(payload)
+    if checked_payload is None:
+        return render_template('401.html', app_url=app_url), 401
+    access_token = checked_payload['access_token']
+    btoken = 'Bearer ' + str(access_token)
 
     request_session = requests.session()
     request_entities = request_session.get(scorpio_url+scorpio_type, headers={
@@ -158,7 +167,7 @@ def make_jwt():
             "callback_url": keyrock_redirect_url,
             "client_id": provider_client_id,
             "scope": "openid iSHARE",
-            "state": "F3D3rat3DstAt3",
+            "state": gen_random(),
             "nonce": gen_random(),
             "acr_values": "urn:http://eidas.europa.eu/LoA/NotNotified/high",
             "language": "en"
@@ -168,3 +177,25 @@ def make_jwt():
 
 def gen_random():
     return(secrets.token_hex(16))
+
+def add_token(access_token):
+    access_tokens.append({'access_token': access_token, 'time_added': time.time()})
+
+def delete_old_tokens():
+    current_time = time.time()
+    for access_token in access_tokens:
+        if current_time - access_token['time_added'] >= 3600:  # 3600 seconds = 1 hour
+            access_tokens.remove(access_token)
+
+def parse_token(access_token):
+    access_token_parts = access_token.split(".")
+    payload = access_token_parts[1]
+    return(payload)
+
+def check_token(payload):
+    for access_token in access_tokens:
+        access_token_parts = access_token['access_token'].split(".")[1]
+        if access_token_parts == payload:
+            print("-----\nAccess token found!\n-----")
+            return(access_token)
+    return None
