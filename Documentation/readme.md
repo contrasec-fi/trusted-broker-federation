@@ -365,7 +365,7 @@ replace `xxx` with one line certificate. Repeat this with other certificates for
 curl --location --request POST 'http://localhost:8082/api/v1/namespaces/NAMESPACE/services/NAMESPACE-ishare-endpoint-auth-service:8080/proxy/credentials/EU.EORI.CONSUMER' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-          "certificateChain": "-----BEGIN CERTIFICATE-----\nxxx\n-----END CERTIFICATE\n----------BEGIN CERTIFICATE----\n-yyy\n-----END CERTIFICATE----------\nBEGIN CERTIFICATE-----\nzzz\n-----END CERTIFICATE-----\",
+          "certificateChain": "-----BEGIN CERTIFICATE-----\nxxx\n-----END CERTIFICATE\n----------BEGIN CERTIFICATE----\n-yyy\n-----END CERTIFICATE----------\nBEGIN CERTIFICATE-----\nzzz\n-----END CERTIFICATE-----\n",
           "signingKey": "-----BEGIN PRIVATE KEY-----\nvvv\n-----END PRIVATE KEY-----\n"
         }’
 ```
